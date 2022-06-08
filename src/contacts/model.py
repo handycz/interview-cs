@@ -21,11 +21,11 @@ class Model:
         self._cursor.execute(
             """
             CREATE TABLE if NOT EXISTS contact(
-                id            INT PRIMARY KEY AUTOINCREMENT  NOT NULL,
-                fullname      CHAR(50)                       NOT NULL,
-                address       CHAR(50)                       NOT NULL,
-                phone_number  CHAR(50)                       NOT NULL,
-                email_address CHAR(50)                       NOT NULL
+                id            INTEGER PRIMARY KEY AUTOINCREMENT  NOT NULL,
+                fullname      CHAR(50)                           NOT NULL,
+                address       CHAR(50)                           NOT NULL,
+                phone_number  CHAR(50)                           NOT NULL,
+                email_address CHAR(50)                           NOT NULL
                 )
              """
         )
