@@ -3,7 +3,7 @@ import asyncio
 import os
 import platform
 import sys
-from asyncio import subprocess
+from asyncio import subprocess, Task
 from dataclasses import dataclass
 from typing import Optional
 
@@ -69,13 +69,25 @@ def _execute_runner(arguments: Arguments):
 
     loop = asyncio.new_event_loop()
     loop.run_until_complete(
-        asyncio.wait([
-            _run_process(arguments.exec_command),
-            _run_monitor(arguments.output_file_path, arguments.period_seconds),
-            ],
-            return_when=asyncio.FIRST_COMPLETED
-        )
+        _async_execute_runner(arguments)
     )
+
+
+async def _async_execute_runner(arguments: Arguments):
+    monitor_task = asyncio.create_task(
+        _run_monitor(arguments.output_file_path, arguments.period_seconds)
+    )
+    await _run_process(arguments.exec_command)
+    await _cancel_task(monitor_task)
+
+
+async def _cancel_task(task: Task):
+    async def is_task_cancelled():
+        return task.cancelled()
+
+    task.cancel()
+
+    await asyncio.wait_for(is_task_cancelled(), 3)
 
 
 async def _run_process(exec_command: str):
@@ -83,7 +95,7 @@ async def _run_process(exec_command: str):
         exec_command
     )
 
-    await process.communicate()
+    await process.wait()
 
 
 async def _run_monitor(output_file_path: Optional[str], period_seconds: int):
@@ -98,6 +110,7 @@ async def _run_monitor_loop(file, period_seconds: int):
     while True:
         data = await _collect_data()
         file.write(data.to_csv())
+        file.flush()
         await asyncio.sleep(period_seconds)
 
 
@@ -112,7 +125,7 @@ async def _collect_data() -> MonitorStats:
 
 async def _collect_data_linux() -> MonitorStats:
     cpu = await _query_shell("uptime | tr -d ',' | awk '{print $8 * 100}'")
-    mem = await _query_shell("free | grep Mem | awk '{print $2}'")
+    mem = await _query_shell("free | grep Mem | awk '{print $3}'")
     fds = await _query_shell("lsof | wc -l &> /dev/null")
 
     return MonitorStats(
@@ -135,7 +148,7 @@ async def _query_shell(cmd: str) -> int:
 
 async def _collect_data_windows() -> MonitorStats:
     cpu = await _query_wmic("cpu get loadpercentage")
-    mem = await _query_wmic("memorychip get capacity")
+    mem = await _query_wmic("os get freephysicalmemory")
     handles = await _query_wmic("process get handlecount", sum_multiple_values=True)
 
     return MonitorStats(
@@ -156,10 +169,14 @@ async def _query_wmic(query: str, *, sum_multiple_values: bool = False) -> int:
 
     if sum_multiple_values:
         value = 0
-        raw_value = True
-        while raw_value:
+
+        while True:
             raw_value = await proc.stdout.readline()
-            value += int(raw_value.decode("ascii").strip())
+            str_value = raw_value.decode("ascii").strip()
+            if not str_value.isnumeric():
+                break
+
+            value += int(str_value)
     else:
         raw_value = await proc.stdout.readline()
         value = int(raw_value.decode("ascii").strip())
