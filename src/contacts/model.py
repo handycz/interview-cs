@@ -2,9 +2,9 @@ import sqlite3
 from dataclasses import dataclass
 
 
-@dataclass
+@dataclass(eq=True, frozen=True)
 class Contact:
-    name: str
+    fullname: str
     address: str
     phone_number: str
     email_address: str
@@ -30,10 +30,16 @@ class Model:
              """
         )
 
-    # def create(self, contact: Contact):
-    #     self._cursor.execute(
-    #         """
-    #         INSERT INTO
-    #         """
-    #     )
+    def create(self, contact: Contact):
+        self._cursor.execute(
+            """
+            INSERT INTO contact(fullname, address, phone_number, email_address)
+            VALUES (?, ?, ?, ?)  
+            """, [
+                contact.fullname,
+                contact.address,
+                contact.phone_number,
+                contact.email_address
+            ]
+        )
 
