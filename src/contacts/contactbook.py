@@ -1,7 +1,7 @@
 import argparse
 import sqlite3
 from abc import ABC, abstractmethod
-from typing import List, Optional
+from typing import List, Optional, Dict
 
 from src.contacts.model import Model, Contact
 from src.contacts.operation import OperationResultStatus, OperationResultContact, OperationResult, \
@@ -89,15 +89,21 @@ def _create_operation(args: argparse.Namespace) -> "Operation":
     elif args.operation == "delete":
         return DeleteOperation(args.id)
     elif args.operation == "modify":
-        return ModifyOperation(
-            Contact(
-                id=args.id,
-                fullname=args.name or "",
-                address=args.address or "",
-                phone_number=args.phone or "",
-                email_address=args.email or "",
-            )
-        )
+        changes = dict()
+
+        if args.name:
+            changes["fullname"] = args.name
+
+        if args.address:
+            changes["address"] = args.address
+
+        if args.phone:
+            changes["phone_number"] = args.phone
+
+        if args.email:
+            changes["email_address"] = args.email
+
+        return ModifyOperation(args.id, changes)
     else:
         raise ValueError(f"Unknown operation {args.operation}")
 
@@ -141,9 +147,15 @@ class ContactBook:
 
         self._model.delete(contact_id=contact_id)
 
-    def modify(self, contact: Contact) -> Contact:
-        self._validation.is_contact_valid(contact)
-        return self._model.modify(contact)
+    def modify(self, contact_id: int, contact_changes: Dict[str, str]) -> Contact:
+        original_contact = self._model.get(contact_id=contact_id)
+
+        changed_contact = Contact(**{**original_contact.__dict__, **contact_changes})
+        print(contact_changes)
+        self._validation.is_contact_valid(changed_contact)
+
+        self._model.modify(changed_contact)
+        return self._model.get(contact_id=contact_id)
 
 
 class Operation(ABC):
@@ -183,16 +195,20 @@ class DeleteOperation(Operation):
 
 
 class ModifyOperation(Operation):
-    _contact: Contact
+    _contact_changes: Dict[str, str]
+    _contact_id: int
 
-    def __init__(self, contact: Contact):
-        self._contact = contact
+    def __init__(self, contact_id: int, contact_changes: Dict[str, str]):
+        self._contact_id = contact_id
+        self._contact_changes = contact_changes
 
     def execute(self, contact_book: ContactBook):
         try:
-            contact_book.modify(self._contact)
+            new_contact = contact_book.modify(self._contact_id, self._contact_changes)
         except ValueError as e:
             return OperationResultStatus(False, str(e))
+
+        return OperationResultContact(new_contact)
 
 
 class GetOperation(Operation):
