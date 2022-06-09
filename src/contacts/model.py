@@ -1,5 +1,6 @@
 import sqlite3
 from dataclasses import dataclass
+from typing import Optional
 
 
 @dataclass(eq=True, frozen=True)
@@ -8,6 +9,7 @@ class Contact:
     address: str
     phone_number: str
     email_address: str
+    id: Optional[int] = None
 
 
 class Model:
@@ -42,4 +44,24 @@ class Model:
                 contact.email_address
             ]
         )
+
+    def get(self, *, contact_id: int) -> Contact:
+        row = self._cursor.execute(
+            """
+            SELECT id, fullname, address, phone_number, email_address 
+            FROM contact 
+            WHERE id=? 
+            """, [
+                contact_id
+            ]
+        ).fetchone()
+
+        return Contact(
+            id=row[0],
+            fullname=row[1],
+            address=row[2],
+            phone_number=row[3],
+            email_address=row[4]
+        )
+
 

@@ -2,6 +2,21 @@ import sqlite3
 
 from src.contacts.model import Model, Contact
 
+CONTACTS = {
+    Contact(
+        fullname="Jan Opicka",
+        address="Zlin",
+        phone_number="+420 777 888 999",
+        email_address="muj@mail.cz"
+    ),
+    Contact(
+        fullname="Petr Mroz",
+        address="Plzen",
+        phone_number="+420 999 888 777",
+        email_address="jeho@e-mail.cz"
+    )
+}
+
 
 def test_create_model(database: sqlite3.Connection):
     _ = Model(database)
@@ -22,20 +37,7 @@ def test_create_model(database: sqlite3.Connection):
 
 def test_create_contacts(database: sqlite3.Connection):
     model = Model(database)
-    input_contacts = {
-        Contact(
-            fullname="Jan Opicka",
-            address="Zlin",
-            phone_number="+420 777 888 999",
-            email_address="muj@mail.cz"
-        ),
-        Contact(
-            fullname="Petr Mroz",
-            address="Plzen",
-            phone_number="+420 999 888 777",
-            email_address="jeho@e-mail.cz"
-        )
-    }
+    input_contacts = CONTACTS
 
     for contact in input_contacts:
         model.create(contact)
@@ -56,3 +58,17 @@ def test_create_contacts(database: sqlite3.Connection):
     }
 
     assert input_contacts == fetched_contacts
+
+
+def test_get_contact(database: sqlite3.Connection):
+    model = Model(database)
+    cursor = database.cursor()
+
+    input_contact = CONTACTS.copy().pop()
+    model.create(input_contact)
+    contact_id = cursor.execute("SELECT id FROM contact LIMIT 1").fetchone()[0]
+    expected_contact = Contact(**{**input_contact.__dict__, "id": contact_id})
+
+    fetched_contact = model.get(contact_id=contact_id)
+
+    assert fetched_contact == expected_contact
