@@ -32,7 +32,7 @@ class OperationResultContacts(OperationResult):
         self._contacts = contacts
 
     def get_output_string(self) -> str:
-        table_format = "{:<5} {:<30} {:<30} {:<15} {:<40}\n"
+        table_format = "{:<5} {:<30} {:<30} {:<15} {:<40}"
         out = [table_format.format("ID", "Name", "E-mail", "Phone", "Address")]
 
         for contact in self._contacts:
@@ -46,7 +46,7 @@ class OperationResultContacts(OperationResult):
                 )
             ]
 
-        return "".join(out)
+        return "\n".join(out)
 
 
 class OperationResultContact(OperationResultContacts):
