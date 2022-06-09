@@ -1,4 +1,39 @@
 # Interview questions
+## Part 1 | Technical Questions
+ 1) `int`, `str`, `float`, `bool`, `bytes`, `bytearray`, `list`, `dict`, `set`, `frozenset`, `tuple`.
+ 2) Arrays, `tuple` - immutable, `list` - mutable.
+ 3) References instance of current object (inside a method).
+ 4) Function called on initialization of an object.
+ 5) `pass` - empty block, `break` - interrupts execution of a loop, `continue` - skips single iteration of a loop.
+ 6) A way to access a part of a list (e.g., only elements 2 - 10).
+ 7) Function that modifies behavior of another function or class, for example, by wrapping it.
+ 8) In-line creation of list/tuple/dict/set from an interator.
+ 9) Single-line anonymous function.
+ 10) By using `class` keyword:
+```
+class MyClass:
+    pass
+```
+
+ 11) 
+```
+def my_function(*args):
+    pass
+```
+
+ 12)
+```
+def is_unique(list_to_check: List[int]) -> bool:
+    return len(set(list_to_check)) == len(list_to_check)
+``` 
+
+## Part 2 | Technical Test
+ 1) b) False.
+ 2) No option is correct, `str(func)` will be printed. If you meant `print(lst)`, the answer is c) [0].
+ 3) c) (8, 9).
+ 4) `++` is not incrementation operator in Python, the result is a).
+ 5) Tricky :) It's c) [4, 3, 2, 1]. 
+
 ## Part 3
 ### Part 3.1  | Password generator
 To launch, run 
