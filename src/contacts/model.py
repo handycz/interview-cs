@@ -1,6 +1,6 @@
 import sqlite3
 from dataclasses import dataclass
-from typing import Optional, Set
+from typing import Optional, Set, List
 
 
 @dataclass(eq=True, frozen=True)
@@ -13,9 +13,11 @@ class Contact:
 
 
 class Model:
+    _connection: sqlite3.Connection
     _cursor: sqlite3.Cursor
 
     def __init__(self, connection: sqlite3.Connection):
+        self._connection = connection
         self._cursor = connection.cursor()
         self._create_tables()
 
@@ -31,6 +33,7 @@ class Model:
                 )
              """
         )
+        self._connection.commit()
 
     def create(self, contact: Contact) -> Contact:
         self._cursor.execute(
@@ -44,10 +47,11 @@ class Model:
                 contact.email_address
             ]
         )
+        self._connection.commit()
 
         return Contact(**{**contact.__dict__, "id": self._cursor.lastrowid})
 
-    def get(self, *, contact_id: int) -> Contact:
+    def get(self, *, contact_id: int) -> Optional[Contact]:
         row = self._cursor.execute(
             """
             SELECT id, fullname, address, phone_number, email_address 
@@ -58,6 +62,9 @@ class Model:
             ]
         ).fetchone()
 
+        if not row:
+            return None
+
         return Contact(
             id=row[0],
             fullname=row[1],
@@ -66,14 +73,15 @@ class Model:
             email_address=row[4]
         )
 
-    def list(self) -> Set[Contact]:
+    def list(self) -> List[Contact]:
         rows = self._cursor.execute(
             """
             SELECT id, fullname, address, phone_number, email_address 
             FROM contact
+            ORDER BY id
             """).fetchall()
 
-        return {
+        return [
             Contact(
                 id=row[0],
                 fullname=row[1],
@@ -81,7 +89,7 @@ class Model:
                 phone_number=row[3],
                 email_address=row[4]
             ) for row in rows
-        }
+        ]
 
     def delete(self, *, contact_id: int):
         self._cursor.execute(
@@ -92,6 +100,7 @@ class Model:
                 contact_id
             ]
         )
+        self._connection.commit()
 
     def modify(self, contact: Contact):
         self._cursor.execute(
@@ -110,3 +119,4 @@ class Model:
                 contact.id,
             ]
         )
+        self._connection.commit()

@@ -79,6 +79,14 @@ def test_get_contact(database: sqlite3.Connection):
     assert fetched_contact == expected_contact
 
 
+def test_get_nonexistent_contact(database: sqlite3.Connection):
+    model = Model(database)
+
+    fetched_contact = model.get(contact_id=1234)
+
+    assert fetched_contact is None
+
+
 def test_list_contacts(database: sqlite3.Connection):
     model = Model(database)
     expected_contacts = set()
@@ -88,7 +96,7 @@ def test_list_contacts(database: sqlite3.Connection):
             model.create(contact)
         )
 
-    fetched_contacts = model.list()
+    fetched_contacts = set(model.list())
 
     assert fetched_contacts == expected_contacts
 
@@ -104,7 +112,7 @@ def test_delete_contact(database: sqlite3.Connection):
 
     deleted_contact = expected_contacts.pop()
     model.delete(contact_id=deleted_contact.id)
-    remaining_contacts = model.list()
+    remaining_contacts = set(model.list())
 
     assert remaining_contacts == expected_contacts
 
@@ -126,6 +134,6 @@ def test_modify_contact(database: sqlite3.Connection):
     expected_contacts.add(modified_contact)
 
     model.modify(modified_contact)
-    fetched_contacts = model.list()
+    fetched_contacts = set(model.list())
 
     assert fetched_contacts == expected_contacts
