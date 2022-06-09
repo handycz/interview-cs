@@ -83,5 +83,15 @@ class Model:
             ) for row in rows
         }
 
+    def delete(self, *, contact_id: int):
+        self._cursor.execute(
+            """
+            DELETE FROM contact
+            WHERE id=?
+            """, [
+                contact_id
+            ]
+        )
+
 
 
