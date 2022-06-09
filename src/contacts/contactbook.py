@@ -150,8 +150,10 @@ class ContactBook:
     def modify(self, contact_id: int, contact_changes: Dict[str, str]) -> Contact:
         original_contact = self._model.get(contact_id=contact_id)
 
+        if not original_contact:
+            raise ValueError("Not found")
+
         changed_contact = Contact(**{**original_contact.__dict__, **contact_changes})
-        print(contact_changes)
         self._validation.is_contact_valid(changed_contact)
 
         self._model.modify(changed_contact)
