@@ -37,38 +37,51 @@ def test_create_model(database: sqlite3.Connection):
 
 def test_create_contacts(database: sqlite3.Connection):
     model = Model(database)
-    input_contacts = CONTACTS
+    expected_contacts = set()
 
-    for contact in input_contacts:
-        model.create(contact)
+    for contact in CONTACTS:
+        expected_contacts.add(
+            model.create(contact)
+        )
 
     cursor = database.cursor()
 
     fetched_raw_contacts = cursor.execute(
-        "SELECT fullname, address, phone_number, email_address FROM contact"
+        "SELECT id, fullname, address, phone_number, email_address FROM contact"
     ).fetchall()
 
     fetched_contacts = {
         Contact(
-            fullname=raw_contact[0],
-            address=raw_contact[1],
-            phone_number=raw_contact[2],
-            email_address=raw_contact[3]
+            id=raw_contact[0],
+            fullname=raw_contact[1],
+            address=raw_contact[2],
+            phone_number=raw_contact[3],
+            email_address=raw_contact[4],
         ) for raw_contact in fetched_raw_contacts
     }
 
-    assert input_contacts == fetched_contacts
+    assert expected_contacts == fetched_contacts
 
 
 def test_get_contact(database: sqlite3.Connection):
     model = Model(database)
-    cursor = database.cursor()
 
     input_contact = CONTACTS.copy().pop()
-    model.create(input_contact)
-    contact_id = cursor.execute("SELECT id FROM contact LIMIT 1").fetchone()[0]
-    expected_contact = Contact(**{**input_contact.__dict__, "id": contact_id})
-
-    fetched_contact = model.get(contact_id=contact_id)
+    expected_contact = model.create(input_contact)
+    fetched_contact = model.get(contact_id=expected_contact.id)
 
     assert fetched_contact == expected_contact
+
+
+def test_list_contacts(database: sqlite3.Connection):
+    model = Model(database)
+    expected_contacts = set()
+
+    for contact in CONTACTS:
+        expected_contacts.add(
+            model.create(contact)
+        )
+
+    fetched_contacts = model.list()
+
+    assert fetched_contacts == expected_contacts
