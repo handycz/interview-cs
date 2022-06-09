@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "akka-interview"
+name = "interview-cs"
 version = "0.1.0"
 description = ""
 authors = ["Ondřej Novák <onno.cz@gmail.com>"]
