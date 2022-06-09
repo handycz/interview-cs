@@ -93,5 +93,20 @@ class Model:
             ]
         )
 
-
-
+    def modify(self, contact: Contact):
+        self._cursor.execute(
+            """
+            UPDATE contact
+            SET fullname=?,
+                phone_number=?,
+                address=?,
+                email_address=?
+            WHERE id=?
+            """, [
+                contact.fullname,
+                contact.phone_number,
+                contact.address,
+                contact.email_address,
+                contact.id,
+            ]
+        )

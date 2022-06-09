@@ -6,19 +6,19 @@ CONTACTS = {
     Contact(
         fullname="Jan Opicka",
         address="Zlin",
-        phone_number="+420 777 888 999",
+        phone_number="+420777888999",
         email_address="muj@mail.cz"
     ),
     Contact(
         fullname="Petr Mroz",
         address="Plzen",
-        phone_number="+420 999 888 777",
+        phone_number="+420999888777",
         email_address="jeho@e-mail.cz"
     ),
     Contact(
         fullname="Jiri Kun",
         address="CB",
-        phone_number="+420 888 777 999",
+        phone_number="+420888777999",
         email_address="cizi@schranka.com"
     )
 }
@@ -107,3 +107,25 @@ def test_delete_contact(database: sqlite3.Connection):
     remaining_contacts = model.list()
 
     assert remaining_contacts == expected_contacts
+
+
+def test_modify_contact(database: sqlite3.Connection):
+    model = Model(database)
+    expected_contacts = set()
+
+    for contact in CONTACTS:
+        expected_contacts.add(
+            model.create(contact)
+        )
+
+    modified_contact = Contact(**{
+        **expected_contacts.pop().__dict__,
+        "fullname": "Modified User",
+        "phone_number": "+123321123231"
+    })
+    expected_contacts.add(modified_contact)
+
+    model.modify(modified_contact)
+    fetched_contacts = model.list()
+
+    assert fetched_contacts == expected_contacts
